@@ -5,177 +5,101 @@ import {
   View,
   StyleSheet,
   Image,
-  useWindowDimensions,
-  // NativeModules,
-  // BackHandler,
+  Modal,
+  Pressable,
 } from 'react-native';
+import Settings from './Settings';
+import AnalogClock from './AnalogClock';
+import DigitalClock from './DigitalClock';
+import Info from './Info';
 
 import KeepAwake from 'react-native-keep-awake';
-import BackgroundTimer from 'react-native-background-timer';
 import {Immersive} from 'react-native-immersive';
-import {getTime, getDate, getWeekday, getBatteryPercentage} from './utils';
-
-const batteryIconEmpty = require('./assets/battery-icon-empty.png');
-const batteryIcon25 = require('./assets/battery-icon-25.png');
-const batteryIcon50 = require('./assets/battery-icon-50.png');
-const batteryIcon75 = require('./assets/battery-icon-75.png');
-const batteryIconFull = require('./assets/battery-icon-full.png');
+import AsyncStorage from '@react-native-async-storage/async-storage';
+const settingsIcon = require('./assets/icons/settings-icon.png');
 
 function App(): React.JSX.Element {
-  const [time, setTime] = useState(getTime(new Date()));
-  const [date, setDate] = useState(getDate(new Date()));
-  const [weekday, setWeekday] = useState(getWeekday(new Date()));
-  const [batteryLevel, setBatteryLevel] = useState(75); // Pil seviyesi durumu
-  const [batteryIcon, setBatteryIcon] = useState(batteryIcon75);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [showSettingsIcon, setShowSettingsIcon] = useState(true);
+  const [showDigitalClock, setShowDigitalClock] = useState(true);
+  const [showAnalogClock, setShowAnalogClock] = useState(false);
 
-  const {width, height} = useWindowDimensions();
-  const orientation = width > height ? 'Landscape' : 'Portrait';
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settingsValue = await AsyncStorage.getItem('showSettingsIcon');
+        const digitalClockValue = await AsyncStorage.getItem(
+          'showDigitalClock',
+        );
+        const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
+        setShowSettingsIcon(settingsValue === 'true');
+        setShowDigitalClock(digitalClockValue === 'true' || false);
+        setShowAnalogClock(analogClockValue === 'true' || false);
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    };
+    loadSettings();
+  }, [isModalVisible]);
 
   useEffect(() => {
     Immersive.on();
   }, []);
 
-  // const {MainActivity} = NativeModules;
-
-  // useEffect(() => {
-  //   const confirmExitWithLockScreen = () => {
-  //     MainActivity.showLockScreen();
-  //   };
-  //   const backAction = () => {
-  //     confirmExitWithLockScreen();
-  //     return true;
-  //   };
-  //   const backHandler = BackHandler.addEventListener(
-  //     'hardwareBackPress',
-  //     backAction,
-  //   );
-  //   return () => backHandler.remove();
-  // }, [MainActivity]);
-
   useEffect(() => {
-    // 5 saniyede bir saat ve tarihi güncelle
-    const intervalId = BackgroundTimer.setInterval(() => {
-      let currentDateTime = new Date();
-      setTime(getTime(currentDateTime));
-      setDate(getDate(currentDateTime));
-      setWeekday(getWeekday(currentDateTime));
-    }, 5000);
-
     KeepAwake.activate(); // Uygulamanın ekranını açık tut
 
-    const updateBatteryIcon = (level: number) => {
-      if (level < 10) {
-        setBatteryIcon(batteryIconEmpty);
-      } else if (level < 25) {
-        setBatteryIcon(batteryIcon25);
-      } else if (level < 50) {
-        setBatteryIcon(batteryIcon50);
-      } else if (level < 75) {
-        setBatteryIcon(batteryIcon75);
-      } else {
-        setBatteryIcon(batteryIconFull);
-      }
-    };
-
-    // Başlangıçta pil seviyesini alma
-    (async () => {
-      const newBatteryLevel = await getBatteryPercentage();
-      setBatteryLevel(newBatteryLevel);
-      updateBatteryIcon(newBatteryLevel);
-    })();
-
-    // Pil seviyesini her dakika güncelle
-    const batteryIntervalId = BackgroundTimer.setInterval(async () => {
-      const newBatteryLevel = await getBatteryPercentage();
-      setBatteryLevel(newBatteryLevel);
-      updateBatteryIcon(newBatteryLevel);
-    }, 60000); // 60000 milisaniye = 1 dakika
-
-    // İzinleri iste
-    // Permissions.request(PERMISSIONS.ANDROID.SYSTEM_ALERT_WINDOW).then(
-    //   response => {
-    //     console.log('Permission response: ', response);
-    //   },
-    // );
-
     return () => {
-      BackgroundTimer.clearInterval(intervalId);
-      BackgroundTimer.clearInterval(batteryIntervalId);
       KeepAwake.deactivate();
     };
   }, []);
 
   return (
     <>
-      <SafeAreaView
-        style={
-          orientation === 'Landscape'
-            ? styles.containerLandscape
-            : styles.containerPortrait
-        }>
-        <Text
-          style={
-            orientation === 'Landscape'
-              ? styles.clockTextLandscape
-              : styles.clockTextPortrait
-          }>
-          {time}
-        </Text>
-        <Text style={styles.dateText}>{date}</Text>
-        <Text style={styles.weekdayText}>{weekday}</Text>
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setIsModalVisible(false)}>
+        <Settings onClose={() => setIsModalVisible(false)} />
+      </Modal>
 
-        {/* Pil seviyesi göstergesi */}
-        <View style={styles.batteryContainer}>
-          <Image style={styles.batteryIcon} source={batteryIcon} />
-          <Text style={styles.batteryText}>{batteryLevel}%</Text>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.settingsContainer}>
+          <Pressable onPress={() => setIsModalVisible(true)}>
+            {showSettingsIcon ? (
+              <Image style={styles.settingsIcon} source={settingsIcon} />
+            ) : (
+              <Text style={[styles.settingsText, styles.settingsIcon]}>&nbsp;</Text>
+            )}
+          </Pressable>
         </View>
+
+        {showDigitalClock && <DigitalClock />}
+        {showAnalogClock && <AnalogClock />}
+        <Info isModalVisible={isModalVisible} />
       </SafeAreaView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  containerPortrait: {
+  container: {
     flex: 1,
-    paddingTop: 120,
     alignItems: 'center',
-    backgroundColor: '#000',
-  },
-  containerLandscape: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#000',
   },
-  clockTextPortrait: {
-    fontSize: 80,
-    color: '#fff',
-    marginBottom: 50,
+  settingsContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 20,
   },
-  clockTextLandscape: {
-    fontSize: 120,
-    color: '#fff',
-  },
-  dateText: {
-    fontSize: 24,
-    color: '#fff',
-    marginTop: 20,
-  },
-  weekdayText: {
-    fontSize: 24,
-    color: '#fff',
-  },
-  batteryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  batteryIcon: {
-    width: 45,
+  settingsIcon: {
+    width: 24,
     height: 24,
-    marginRight: 8,
   },
-  batteryText: {
+  settingsText: {
     fontSize: 18,
     color: '#fff',
   },

@@ -244,7 +244,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
 
           <View style={styles.sliderContainer}>
             <Text style={styles.label}>
-              Digital clock landscape font size: {landscapeClockFontSize}
+              Digital clock landscape size: {landscapeClockFontSize}
             </Text>
             <Slider
               style={styles.slider}

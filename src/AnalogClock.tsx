@@ -9,6 +9,7 @@ interface AnalogClockProps {
   secondHandColor?: string;
   dialColor?: string;
   showNumbers?: boolean;
+  brightness?: number;
 }
 
 const AnalogClock: React.FC<AnalogClockProps> = ({
@@ -21,6 +22,7 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
   secondHandColor = '#FF0000',
   dialColor = '#FFFFFF',
   showNumbers = true,
+  brightness = 1.0,
 }) => {
   const [time, setTime] = useState(new Date());
 
@@ -72,7 +74,7 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
   const hourHand = getCoordinates(hourAngle, hourHandLength);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { opacity: brightness }]}>
       <Svg height={size} width={size}>
         {/* Saat kadranı */}
         <Circle

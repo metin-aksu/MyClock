@@ -8,11 +8,13 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
-// import CheckBox from '@react-native-community/checkbox';
-// import {CheckBox} from 'react-native-elements';
+
+import About from './About';
+
 const closeIcon = require('./assets/icons/close-icon.png');
 const checkedIcon = require('./assets/icons/checked-icon.png');
 const uncheckedIcon = require('./assets/icons/unchecked-icon.png');
@@ -33,69 +35,64 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({onClose}) => {
-  const [showDigitalClock, setShowDigitalClock] = useState(
-    AsyncStorage.getItem('showDigitalClock') === 'true',
-  );
+  const [showDigitalClock, setShowDigitalClock] = useState(true);
+  const [showAnalogClock, setShowAnalogClock] = useState(false);
 
-  const [showAnalogClock, setShowAnalogClock] = useState(
-    AsyncStorage.getItem('showAnalogClock') === 'true',
-  );
+  const [showDate, setShowDate] = useState(true);
+  const [showWeekday, setShowWeekday] = useState(true);
+  const [showBattery, setShowBattery] = useState(true);
+  const [showSettingsIcon, setShowSettingsIcon] = useState(true);
 
-  const [showDate, setShowDate] = useState(
-    AsyncStorage.getItem('showDate') === 'true',
-  );
-  const [showWeekday, setShowWeekday] = useState(
-    AsyncStorage.getItem('showWeekday') === 'true',
-  );
-  const [showBattery, setShowBattery] = useState(
-    AsyncStorage.getItem('showBattery') === 'true',
-  );
-  const [showSettingsIcon, setShowSettingsIcon] = useState(
-    AsyncStorage.getItem('showSettingsIcon') === 'true',
-  );
   const [portraitClockFontSize, setPortraitClockFontSize] = useState(80);
   const [landscapeClockFontSize, setLandscapeClockFontSize] = useState(120);
+  const [brightness, setBrightness] = useState(1.0);
   const [selectedFont, setSelectedFont] = useState('System');
 
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const digitalClockValue = await AsyncStorage.getItem(
-          'showDigitalClock',
-        );
-        const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
-        const dateValue = await AsyncStorage.getItem('showDate');
-        const weekdayValue = await AsyncStorage.getItem('showWeekday');
-        const batteryValue = await AsyncStorage.getItem('showBattery');
-        const settingsValue = await AsyncStorage.getItem('showSettingsIcon');
-        const portraitFontSize = await AsyncStorage.getItem(
-          'portraitClockFontSize',
-        );
-        const landscapeFontSize = await AsyncStorage.getItem(
-          'landscapeClockFontSize',
-        );
-        const savedFont = await AsyncStorage.getItem('clockFont');
+  const loadSettings = async () => {
+    try {
+      const digitalClockValue = await AsyncStorage.getItem('showDigitalClock');
+      const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
+      const dateValue = await AsyncStorage.getItem('showDate');
+      const weekdayValue = await AsyncStorage.getItem('showWeekday');
+      const batteryValue = await AsyncStorage.getItem('showBattery');
+      const settingsValue = await AsyncStorage.getItem('showSettingsIcon');
+      const portraitFontSize = await AsyncStorage.getItem(
+        'portraitClockFontSize',
+      );
+      const landscapeFontSize = await AsyncStorage.getItem(
+        'landscapeClockFontSize',
+      );
+      const savedBrightness = await AsyncStorage.getItem('brightness');
+      const savedFont = await AsyncStorage.getItem('clockFont');
 
-        setShowDigitalClock(digitalClockValue === 'true');
-        setShowAnalogClock(analogClockValue === 'true');
-        setShowDate(dateValue === 'true');
-        setShowWeekday(weekdayValue === 'true');
-        setShowBattery(batteryValue === 'true');
-        setShowSettingsIcon(settingsValue === 'true');
-        setPortraitClockFontSize(
-          portraitFontSize ? Number(portraitFontSize) : 80,
-        );
-        setLandscapeClockFontSize(
-          landscapeFontSize ? Number(landscapeFontSize) : 120,
-        );
-        if (savedFont) {
-          setSelectedFont(savedFont);
-        }
-      } catch (error) {
-        console.error('Error loading settings:', error);
+      setShowDigitalClock(
+        digitalClockValue === null ? true : digitalClockValue === 'true',
+      );
+      setShowAnalogClock(
+        analogClockValue === null ? false : analogClockValue === 'true',
+      );
+      setShowDate(dateValue === null ? true : dateValue === 'true');
+      setShowWeekday(weekdayValue === null ? true : weekdayValue === 'true');
+      setShowBattery(batteryValue === null ? true : batteryValue === 'true');
+      setShowSettingsIcon(
+        settingsValue === null ? true : settingsValue === 'true',
+      );
+      setPortraitClockFontSize(
+        portraitFontSize === null ? 80 : Number(portraitFontSize),
+      );
+      setLandscapeClockFontSize(
+        landscapeFontSize === null ? 120 : Number(landscapeFontSize),
+      );
+      if (savedBrightness !== null) {
+        setBrightness(parseFloat(savedBrightness));
       }
-    };
+      setSelectedFont(savedFont === null ? 'System' : savedFont);
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+  };
 
+  useEffect(() => {
     loadSettings();
   }, []);
 
@@ -125,6 +122,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
   };
 
   const handleShowSettingsIconChange = async (value: boolean) => {
+    !value && Alert.alert('Info','You can access the settings by clicking on the area where the settings icon is located.');
     setShowSettingsIcon(value);
     await AsyncStorage.setItem('showSettingsIcon', String(value));
   };
@@ -137,6 +135,11 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
   const handleLandscapeClockFontSizeChange = async (value: number) => {
     setLandscapeClockFontSize(Number(value));
     await AsyncStorage.setItem('landscapeClockFontSize', String(value));
+  };
+
+  const handleBrightnessChange = async (value: number) => {
+    setBrightness(value);
+    await AsyncStorage.setItem('brightness', String(value));
   };
 
   const handleFontChange = async (fontValue: string) => {
@@ -224,33 +227,53 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
 
           <View style={styles.sliderContainer}>
             <Text style={styles.label}>
-              Portrait font size: {portraitClockFontSize}
+              Digital clock portrait size: {portraitClockFontSize}
             </Text>
             <Slider
               style={styles.slider}
-              minimumValue={60}
-              maximumValue={200}
+              minimumValue={50}
+              maximumValue={300}
               value={portraitClockFontSize}
               onValueChange={handlePortraitClockFontSizeChange}
               minimumTrackTintColor="#007AFF"
               maximumTrackTintColor="#000000"
+              thumbTintColor="#FFFFFF"
               step={1}
             />
           </View>
 
           <View style={styles.sliderContainer}>
             <Text style={styles.label}>
-              Landscape font size: {landscapeClockFontSize}
+              Digital clock landscape font size: {landscapeClockFontSize}
             </Text>
             <Slider
               style={styles.slider}
-              minimumValue={60}
-              maximumValue={160}
+              minimumValue={50}
+              maximumValue={300}
               value={landscapeClockFontSize}
               onValueChange={handleLandscapeClockFontSizeChange}
               minimumTrackTintColor="#007AFF"
               maximumTrackTintColor="#000000"
+              thumbTintColor="#FFFFFF"
               step={1}
+            />
+          </View>
+
+          <View style={styles.sliderContainer}>
+            <Text style={styles.label}>
+              Brightness: {Math.round(brightness * 100)}%
+            </Text>
+            <Slider
+              style={styles.slider}
+              minimumValue={0.1}
+              maximumValue={1.0}
+              value={brightness}
+              onValueChange={handleBrightnessChange}
+              // minimumTrackTintColor="#FFFFFF"
+              // maximumTrackTintColor="#000000"
+              minimumTrackTintColor="#007AFF"
+              maximumTrackTintColor="#000000"
+              thumbTintColor="#FFFFFF"
             />
           </View>
 
@@ -284,6 +307,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
               ))}
             </View>
           </View>
+          <About />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -300,14 +324,14 @@ const styles = StyleSheet.create({
   },
   settingsContainer: {
     padding: 24,
-    paddingBottom: 40, // Alt kısımda extra padding
   },
   titleContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 24,
-    paddingBottom: 20,
+    paddingTop: 24,
+    paddingLeft: 24,
+    paddingRight: 24,
   },
   title: {
     fontSize: 24,
@@ -321,7 +345,7 @@ const styles = StyleSheet.create({
   },
   checkboxContainer: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 5,
     alignItems: 'center',
   },
   checkbox: {

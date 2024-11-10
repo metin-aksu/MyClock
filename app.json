@@ -1,4 +1,7 @@
 {
   "name": "MyClock",
-  "displayName": "MyClock"
+  "displayName": "MyClock",
+  "version": "1.0.0",
+  "author": "Metin AKSU",
+  "website": "http://metinaksu.com"
 }

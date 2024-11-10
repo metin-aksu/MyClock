@@ -23,6 +23,7 @@ function App(): React.JSX.Element {
   const [showSettingsIcon, setShowSettingsIcon] = useState(true);
   const [showDigitalClock, setShowDigitalClock] = useState(true);
   const [showAnalogClock, setShowAnalogClock] = useState(false);
+  const [brightness, setBrightness] = useState(1.0);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -32,9 +33,20 @@ function App(): React.JSX.Element {
           'showDigitalClock',
         );
         const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
-        setShowSettingsIcon(settingsValue === 'true');
-        setShowDigitalClock(digitalClockValue === 'true' || false);
-        setShowAnalogClock(analogClockValue === 'true' || false);
+        const savedBrightness = await AsyncStorage.getItem('brightness');
+
+        setShowSettingsIcon(
+          settingsValue === null ? true : settingsValue === 'true',
+        );
+        setShowDigitalClock(
+          digitalClockValue === null ? true : digitalClockValue === 'true',
+        );
+        setShowAnalogClock(
+          analogClockValue === null ? false : analogClockValue === 'true',
+        );
+        if (savedBrightness !== null) {
+          setBrightness(parseFloat(savedBrightness));
+        }
       } catch (error) {
         console.error('Error loading settings:', error);
       }
@@ -70,14 +82,26 @@ function App(): React.JSX.Element {
             {showSettingsIcon ? (
               <Image style={styles.settingsIcon} source={settingsIcon} />
             ) : (
-              <Text style={[styles.settingsText, styles.settingsIcon]}>&nbsp;</Text>
+              <Text style={[styles.settingsText, styles.settingsIcon]}>
+                &nbsp;
+              </Text>
             )}
           </Pressable>
         </View>
 
-        {showDigitalClock && <DigitalClock />}
-        {showAnalogClock && <AnalogClock />}
-        <Info isModalVisible={isModalVisible} />
+        {showDigitalClock && (
+          <DigitalClock
+            isModalVisible={isModalVisible}
+            brightness={brightness}
+          />
+        )}
+        {showAnalogClock && (
+          <AnalogClock
+            isModalVisible={isModalVisible}
+            brightness={brightness}
+          />
+        )}
+        <Info isModalVisible={isModalVisible} brightness={brightness} />
       </SafeAreaView>
     </>
   );

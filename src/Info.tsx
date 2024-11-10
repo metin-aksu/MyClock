@@ -13,23 +13,18 @@ const batteryIconFull = require('./assets/icons/battery-icon-full.png');
 
 interface InfoProps {
   isModalVisible?: boolean;
+  brightness?: number;
 }
 
-const Info: React.FC<InfoProps> = ({isModalVisible = false}) => {
+const Info: React.FC<InfoProps> = ({isModalVisible = false, brightness = 1.0}) => {
   const [date, setDate] = useState(getDate(new Date()));
   const [weekday, setWeekday] = useState(getWeekday(new Date()));
   const [batteryLevel, setBatteryLevel] = useState(75); // Pil seviyesi durumu
   const [batteryIcon, setBatteryIcon] = useState(batteryIcon75);
 
-  const [showDate, setShowDate] = useState(
-    AsyncStorage.getItem('showDate') === 'true',
-  );
-  const [showWeekday, setShowWeekday] = useState(
-    AsyncStorage.getItem('showWeekday') === 'true',
-  );
-  const [showBattery, setShowBattery] = useState(
-    AsyncStorage.getItem('showBattery') === 'true',
-  );
+  const [showDate, setShowDate] = useState(true);
+  const [showWeekday, setShowWeekday] = useState(true);
+  const [showBattery, setShowBattery] = useState(true);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -38,9 +33,9 @@ const Info: React.FC<InfoProps> = ({isModalVisible = false}) => {
         const weekdayValue = await AsyncStorage.getItem('showWeekday');
         const batteryValue = await AsyncStorage.getItem('showBattery');
 
-        setShowDate(dateValue === 'true');
-        setShowWeekday(weekdayValue === 'true');
-        setShowBattery(batteryValue === 'true');
+        setShowDate(dateValue === null ? true : dateValue === 'true');
+        setShowWeekday(weekdayValue === null ? true : weekdayValue === 'true');
+        setShowBattery(batteryValue === null ? true : batteryValue === 'true');
       } catch (error) {
         console.error('Error loading settings:', error);
       }
@@ -88,7 +83,7 @@ const Info: React.FC<InfoProps> = ({isModalVisible = false}) => {
 
   return (
     <>
-      <View style={styles.container}>
+      <View style={[styles.container, {opacity: brightness}]}>
         {showDate && <Text style={styles.dateText}>{date}</Text>}
         {showWeekday && <Text style={styles.weekdayText}>{weekday}</Text>}
 

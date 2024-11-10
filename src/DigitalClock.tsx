@@ -4,7 +4,15 @@ import {Text, View, StyleSheet, useWindowDimensions} from 'react-native';
 import {getTime} from './utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-function DigitalClock(): React.JSX.Element {
+interface DigitalClockProps {
+  isModalVisible?: boolean;
+  brightness?: number;
+}
+
+const DigitalClock: React.FC<DigitalClockProps> = ({
+  isModalVisible = false,
+  brightness = 1.0,
+}) => {
   const [time, setTime] = useState(getTime(new Date()));
 
   const [portraitClockFontSize, setPortraitClockFontSize] = useState(80);
@@ -39,7 +47,7 @@ function DigitalClock(): React.JSX.Element {
       }
     };
     loadSettings();
-  }, []);
+  }, [isModalVisible]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -63,13 +71,14 @@ function DigitalClock(): React.JSX.Element {
                   : portraitClockFontSize,
             },
             {fontFamily: font},
+            { opacity: brightness },
           ]}>
           {time}
         </Text>
       </View>
     </>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

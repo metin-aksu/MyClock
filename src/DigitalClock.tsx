@@ -14,7 +14,7 @@ const DigitalClock: React.FC<DigitalClockProps> = ({
   brightness = 1.0,
 }) => {
   const [time, setTime] = useState(getTime(new Date()));
-
+  const [showDigitalClock, setShowDigitalClock] = useState(true);
   const [portraitClockFontSize, setPortraitClockFontSize] = useState(80);
   const [landscapeClockFontSize, setLandscapeClockFontSize] = useState(120);
   const [font, setFont] = useState('System');
@@ -33,6 +33,10 @@ const DigitalClock: React.FC<DigitalClockProps> = ({
         );
         const savedFont = await AsyncStorage.getItem('clockFont');
 
+        const digitalClockValue = await AsyncStorage.getItem(
+          'showDigitalClock',
+        );
+
         setPortraitClockFontSize(
           portraitFontSize ? Number(portraitFontSize) : 80,
         );
@@ -42,6 +46,10 @@ const DigitalClock: React.FC<DigitalClockProps> = ({
         if (savedFont) {
           setFont(savedFont);
         }
+
+        setShowDigitalClock(
+          digitalClockValue === null ? true : digitalClockValue === 'true',
+        );
       } catch (error) {
         console.error('Error loading settings:', error);
       }
@@ -50,13 +58,15 @@ const DigitalClock: React.FC<DigitalClockProps> = ({
   }, [isModalVisible]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      let currentDateTime = new Date();
-      setTime(getTime(currentDateTime));
-    }, 1000);
+    if (showDigitalClock === true) {
+      const timer = setInterval(() => {
+        let currentDateTime = new Date();
+        setTime(getTime(currentDateTime));
+      }, 5000);
 
-    return () => clearInterval(timer);
-  }, []);
+      return () => clearInterval(timer);
+    }
+  }, [showDigitalClock]);
 
   return (
     <>
@@ -71,7 +81,7 @@ const DigitalClock: React.FC<DigitalClockProps> = ({
                   : portraitClockFontSize,
             },
             {fontFamily: font},
-            { opacity: brightness },
+            {opacity: brightness},
           ]}>
           {time}
         </Text>

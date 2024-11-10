@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Text, View, StyleSheet, Image} from 'react-native';
 
-import BackgroundTimer from 'react-native-background-timer';
 import {getDate, getWeekday, getBatteryPercentage} from './utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -66,7 +65,7 @@ const Info: React.FC<InfoProps> = ({isModalVisible = false, brightness = 1.0}) =
     })();
 
     // Tarih, günü ve pil seviyesini her dakika güncelle
-    const intervalId = BackgroundTimer.setInterval(async () => {
+    const intervalId = setInterval(async () => {
       let currentDateTime = new Date();
       setDate(getDate(currentDateTime));
       setWeekday(getWeekday(currentDateTime));
@@ -77,7 +76,7 @@ const Info: React.FC<InfoProps> = ({isModalVisible = false, brightness = 1.0}) =
     }, 60000);
 
     return () => {
-      BackgroundTimer.clearInterval(intervalId);
+      clearInterval(intervalId);
     };
   }, []);
 

@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {View, StyleSheet, Dimensions} from 'react-native';
-import Svg, {Circle, Line, G, Text} from 'react-native-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Svg, {Circle, Line, Text} from 'react-native-svg';
 
 interface AnalogClockProps {
   size?: number;
@@ -10,6 +11,7 @@ interface AnalogClockProps {
   dialColor?: string;
   showNumbers?: boolean;
   brightness?: number;
+  isModalVisible?: boolean;
 }
 
 const AnalogClock: React.FC<AnalogClockProps> = ({
@@ -23,16 +25,33 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
   dialColor = '#FFFFFF',
   showNumbers = true,
   brightness = 1.0,
+  isModalVisible = false,
 }) => {
   const [time, setTime] = useState(new Date());
+  const [showAnalogClock, setShowAnalogClock] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(new Date());
-    }, 1000);
+    const loadSettings = async () => {
+      try {
+        const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
+        setShowAnalogClock(
+          analogClockValue === null ? false : analogClockValue === 'true',
+        );
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    };
+    loadSettings();
+  }, [isModalVisible]);
 
-    return () => clearInterval(timer);
-  }, []);
+  useEffect(() => {
+    if (showAnalogClock === true) {
+      const timer = setInterval(() => {
+        setTime(new Date());
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [showAnalogClock]);
 
   // Saat merkez noktası
   const center = size / 2;
@@ -74,7 +93,7 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
   const hourHand = getCoordinates(hourAngle, hourHandLength);
 
   return (
-    <View style={[styles.container, { opacity: brightness }]}>
+    <View style={[styles.container, {opacity: brightness}]}>
       <Svg height={size} width={size}>
         {/* Saat kadranı */}
         <Circle

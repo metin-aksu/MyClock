@@ -1,9 +1,11 @@
 package com.myclock
 
-import android.app.Activity
-import android.app.KeyguardManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.app.Activity
+import android.app.KeyguardManager
 import android.os.Bundle
 
 import com.facebook.react.ReactActivity
@@ -12,6 +14,7 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnable
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 class MainActivity : ReactActivity() {
+    private var screenReceiver: BroadcastReceiver? = null
 
   /**
    * Returns the name of the main component registered from JavaScript. This is used to schedule
@@ -26,36 +29,41 @@ class MainActivity : ReactActivity() {
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
-  /** Sonradan Eklenen Kısım */
-  override fun onCreate(savedInstanceState: Bundle?) {
+  /** Yeni eklenen kısım */
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-    }
-
-    fun showLockScreen() {
-        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-        val intent = keyguardManager.createConfirmDeviceCredentialIntent(
-            "Kimlik Doğrulama",
-            "Uygulamadan çıkmak için doğrulama yapın"
-        )
-        if (intent != null) {
-            startActivityForResult(intent, REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL)
+        
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_SCREEN_OFF)
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL) {
-            if (resultCode == Activity.RESULT_OK) {
-                // Doğrulama başarılı, uygulamayı kapat
-                finish()
-            } else {
-                // Doğrulama başarısız
+        
+        screenReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                when (intent.action) {
+                    Intent.ACTION_SCREEN_ON -> {
+                        // Ekran açıldığında yapılacak işlemler
+                        Intent(context, MainActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            context.startActivity(this)
+                        }
+                    }
+                }
             }
         }
+        
+        screenReceiver?.let {
+            registerReceiver(it, filter)
+        }
     }
 
-    companion object {
-        private const val REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL = 1
+    override fun onDestroy() {
+        super.onDestroy()
+        screenReceiver?.let {
+            unregisterReceiver(it)
+        }
+        screenReceiver = null
     }
-  /** Sonradan Eklenen Kısım */
+  /** Yeni eklenen kısım */
+
 }

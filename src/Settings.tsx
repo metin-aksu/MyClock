@@ -15,6 +15,9 @@ import Slider from '@react-native-community/slider';
 
 import About from './About';
 
+import {useOrientationSetting} from './hooks/useOrientationSetting';
+import {OrientationTypes} from './constants/storage';
+
 const closeIcon = require('./assets/icons/close-icon.png');
 const checkedIcon = require('./assets/icons/checked-icon.png');
 const uncheckedIcon = require('./assets/icons/unchecked-icon.png');
@@ -36,7 +39,7 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({onClose}) => {
   const [showDigitalClock, setShowDigitalClock] = useState(true);
-  const [showAnalogClock, setShowAnalogClock] = useState(false);
+  // const [showAnalogClock, setShowAnalogClock] = useState(false);
 
   const [showDate, setShowDate] = useState(true);
   const [showWeekday, setShowWeekday] = useState(true);
@@ -47,11 +50,12 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
   const [landscapeClockFontSize, setLandscapeClockFontSize] = useState(120);
   const [brightness, setBrightness] = useState(1.0);
   const [selectedFont, setSelectedFont] = useState('System');
+  const {orientationSetting, setOrientation} = useOrientationSetting();
 
   const loadSettings = async () => {
     try {
       const digitalClockValue = await AsyncStorage.getItem('showDigitalClock');
-      const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
+      // const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
       const dateValue = await AsyncStorage.getItem('showDate');
       const weekdayValue = await AsyncStorage.getItem('showWeekday');
       const batteryValue = await AsyncStorage.getItem('showBattery');
@@ -68,9 +72,9 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
       setShowDigitalClock(
         digitalClockValue === null ? true : digitalClockValue === 'true',
       );
-      setShowAnalogClock(
-        analogClockValue === null ? false : analogClockValue === 'true',
-      );
+      // setShowAnalogClock(
+      //   analogClockValue === null ? false : analogClockValue === 'true',
+      // );
       setShowDate(dateValue === null ? true : dateValue === 'true');
       setShowWeekday(weekdayValue === null ? true : weekdayValue === 'true');
       setShowBattery(batteryValue === null ? true : batteryValue === 'true');
@@ -101,10 +105,10 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
     await AsyncStorage.setItem('showDigitalClock', String(value));
   };
 
-  const handleShowAnalogClockChange = async (value: boolean) => {
-    setShowAnalogClock(value);
-    await AsyncStorage.setItem('showAnalogClock', String(value));
-  };
+  // const handleShowAnalogClockChange = async (value: boolean) => {
+  //   setShowAnalogClock(value);
+  //   await AsyncStorage.setItem('showAnalogClock', String(value));
+  // };
 
   const handleShowDateChange = async (value: boolean) => {
     setShowDate(value);
@@ -122,7 +126,11 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
   };
 
   const handleShowSettingsIconChange = async (value: boolean) => {
-    !value && Alert.alert('Info','You can access the settings by clicking on the area where the settings icon is located.');
+    !value &&
+      Alert.alert(
+        'Info',
+        'You can access the settings by clicking on the area where the settings icon is located.',
+      );
     setShowSettingsIcon(value);
     await AsyncStorage.setItem('showSettingsIcon', String(value));
   };
@@ -175,7 +183,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
             <Text style={styles.label}>Show digital clock</Text>
           </Pressable>
 
-          <Pressable
+          {/* <Pressable
             style={styles.checkboxContainer}
             onPress={() => handleShowAnalogClockChange(!showAnalogClock)}>
             <Image
@@ -183,7 +191,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
               source={showAnalogClock ? checkedIcon : uncheckedIcon}
             />
             <Text style={styles.label}>Show analog clock</Text>
-          </Pressable>
+          </Pressable> */}
 
           <Pressable
             style={styles.checkboxContainer}
@@ -307,6 +315,44 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
               ))}
             </View>
           </View>
+          {/* // Ekran yönü ayarları */}
+          <View>
+            <Text style={styles.sectionTitle}>Screen Orientation</Text>
+            <View style={styles.orientationContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.option,
+                  orientationSetting === OrientationTypes.FREE &&
+                    styles.selectedOption,
+                ]}
+                onPress={() => setOrientation(OrientationTypes.FREE)}>
+                <Text style={styles.optionText}>Free</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.option,
+                  orientationSetting === OrientationTypes.PORTRAIT &&
+                    styles.selectedOption,
+                ]}
+                onPress={() => setOrientation(OrientationTypes.PORTRAIT)}>
+                <Text style={styles.optionText}>Portrait</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.option,
+                  orientationSetting === OrientationTypes.LANDSCAPE &&
+                    styles.selectedOption,
+                ]}
+                onPress={() => setOrientation(OrientationTypes.LANDSCAPE)}>
+                <Text style={styles.optionText}>Landscape</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* // Ekran yönü ayarları */}
+
           <About />
         </View>
       </ScrollView>
@@ -404,6 +450,29 @@ const styles = StyleSheet.create({
   },
   selectedFontText: {
     color: 'white',
+  },
+  orientationContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  option: {
+    width: '32%',
+    backgroundColor: '#222',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 10,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectedOption: {
+    borderColor: '#007AFF',
+    backgroundColor: '#1a3c5a',
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#fff',
   },
 });
 

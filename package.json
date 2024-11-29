@@ -16,7 +16,8 @@
     "react-native-device-info": "^14.0.0",
     "react-native-immersive": "^2.0.0",
     "react-native-keep-awake": "^4.0.0",
-    "react-native-svg": "^15.8.0"
+    "react-native-orientation-locker": "^1.7.0",
+    "react-native-svg": "^15.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -20,7 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const settingsIcon = require('./assets/icons/settings-icon.png');
 
 function App(): React.JSX.Element {
-  useOrientationSetting();
+  const test = useOrientationSetting();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [showSettingsIcon, setShowSettingsIcon] = useState(true);
   const [showDigitalClock, setShowDigitalClock] = useState(true);

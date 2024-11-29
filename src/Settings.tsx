@@ -18,6 +18,7 @@ import About from './About';
 import {useOrientationSetting} from './hooks/useOrientationSetting';
 import {OrientationTypes} from './constants/storage';
 
+
 const closeIcon = require('./assets/icons/close-icon.png');
 const checkedIcon = require('./assets/icons/checked-icon.png');
 const uncheckedIcon = require('./assets/icons/unchecked-icon.png');

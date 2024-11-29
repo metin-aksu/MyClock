@@ -9,7 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import Settings from './Settings';
-import {useOrientationSetting} from './hooks/useOrientationSetting';
+
 // import AnalogClock from './AnalogClock';
 import DigitalClock from './DigitalClock';
 import Info from './Info';
@@ -17,10 +17,17 @@ import Info from './Info';
 import KeepAwake from 'react-native-keep-awake';
 import {Immersive} from 'react-native-immersive';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Orientation from 'react-native-orientation-locker';
+
 const settingsIcon = require('./assets/icons/settings-icon.png');
 
+const OrientationTypes = {
+  FREE: 'free',
+  PORTRAIT: 'portrait',
+  LANDSCAPE: 'landscape',
+};
+
 function App(): React.JSX.Element {
-  const test = useOrientationSetting();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [showSettingsIcon, setShowSettingsIcon] = useState(true);
   const [showDigitalClock, setShowDigitalClock] = useState(true);
@@ -49,6 +56,10 @@ function App(): React.JSX.Element {
         if (savedBrightness !== null) {
           setBrightness(parseFloat(savedBrightness));
         }
+        const savedOrientation = await AsyncStorage.getItem('orientation');
+        if (savedOrientation !== null) {
+          applyOrientation(savedOrientation);
+        }
       } catch (error) {
         console.error('Error loading settings:', error);
       }
@@ -67,6 +78,21 @@ function App(): React.JSX.Element {
       KeepAwake.deactivate();
     };
   }, []);
+
+  const applyOrientation = setting => {
+    switch (setting) {
+      case OrientationTypes.PORTRAIT:
+        Orientation.lockToPortrait();
+        break;
+      case OrientationTypes.LANDSCAPE:
+        Orientation.lockToLandscape();
+        break;
+      case OrientationTypes.FREE:
+      default:
+        Orientation.unlockAllOrientations();
+        break;
+    }
+  };
 
   return (
     <>

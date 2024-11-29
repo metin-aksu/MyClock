@@ -12,12 +12,9 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
+import Orientation from 'react-native-orientation-locker';
 
 import About from './About';
-
-import {useOrientationSetting} from './hooks/useOrientationSetting';
-import {OrientationTypes} from './constants/storage';
-
 
 const closeIcon = require('./assets/icons/close-icon.png');
 const checkedIcon = require('./assets/icons/checked-icon.png');
@@ -33,6 +30,12 @@ const AVAILABLE_FONTS = [
     value: 'Digital-7',
   },
 ];
+
+const OrientationTypes = {
+  FREE: 'free',
+  PORTRAIT: 'portrait',
+  LANDSCAPE: 'landscape',
+};
 
 interface SettingsProps {
   onClose: () => void;
@@ -51,10 +54,13 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
   const [landscapeClockFontSize, setLandscapeClockFontSize] = useState(120);
   const [brightness, setBrightness] = useState(1.0);
   const [selectedFont, setSelectedFont] = useState('System');
-  const {orientationSetting, setOrientation} = useOrientationSetting();
+  const [orientationSetting, setOrientationSetting] = useState();
 
   const loadSettings = async () => {
     try {
+      // =========================
+      // DEĞER OKUMALAR
+      // =========================
       const digitalClockValue = await AsyncStorage.getItem('showDigitalClock');
       // const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
       const dateValue = await AsyncStorage.getItem('showDate');
@@ -69,7 +75,10 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
       );
       const savedBrightness = await AsyncStorage.getItem('brightness');
       const savedFont = await AsyncStorage.getItem('clockFont');
-
+      const savedOrientation = await AsyncStorage.getItem('orientation');
+      // =========================
+      // DEĞER ATAMALAR
+      // =========================
       setShowDigitalClock(
         digitalClockValue === null ? true : digitalClockValue === 'true',
       );
@@ -92,6 +101,9 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
         setBrightness(parseFloat(savedBrightness));
       }
       setSelectedFont(savedFont === null ? 'System' : savedFont);
+      if (savedOrientation !== null) {
+        setOrientationSetting(savedOrientation);
+      }
     } catch (error) {
       console.error('Error loading settings:', error);
     }
@@ -157,6 +169,33 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
       setSelectedFont(fontValue);
     } catch (error) {
       console.error('Error saving font:', error);
+    }
+  };
+
+  useEffect(() => {
+    const setOrSet = async () => {
+      try {
+        await AsyncStorage.setItem('orientation', orientationSetting);
+        applyOrientation(orientationSetting);
+      } catch (error) {
+        console.error('Error saving orientation setting:', error);
+      }
+    };
+    setOrSet();
+  }, [orientationSetting]);
+
+  const applyOrientation = setting => {
+    switch (setting) {
+      case OrientationTypes.PORTRAIT:
+        Orientation.lockToPortrait();
+        break;
+      case OrientationTypes.LANDSCAPE:
+        Orientation.lockToLandscape();
+        break;
+      case OrientationTypes.FREE:
+      default:
+        Orientation.unlockAllOrientations();
+        break;
     }
   };
 
@@ -326,7 +365,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
                   orientationSetting === OrientationTypes.FREE &&
                     styles.selectedOption,
                 ]}
-                onPress={() => setOrientation(OrientationTypes.FREE)}>
+                onPress={() => setOrientationSetting(OrientationTypes.FREE)}>
                 <Text style={styles.optionText}>Free</Text>
               </TouchableOpacity>
 
@@ -336,7 +375,9 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
                   orientationSetting === OrientationTypes.PORTRAIT &&
                     styles.selectedOption,
                 ]}
-                onPress={() => setOrientation(OrientationTypes.PORTRAIT)}>
+                onPress={() =>
+                  setOrientationSetting(OrientationTypes.PORTRAIT)
+                }>
                 <Text style={styles.optionText}>Portrait</Text>
               </TouchableOpacity>
 
@@ -346,7 +387,9 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
                   orientationSetting === OrientationTypes.LANDSCAPE &&
                     styles.selectedOption,
                 ]}
-                onPress={() => setOrientation(OrientationTypes.LANDSCAPE)}>
+                onPress={() =>
+                  setOrientationSetting(OrientationTypes.LANDSCAPE)
+                }>
                 <Text style={styles.optionText}>Landscape</Text>
               </TouchableOpacity>
             </View>
@@ -461,8 +504,7 @@ const styles = StyleSheet.create({
     width: '32%',
     backgroundColor: '#222',
     borderRadius: 8,
-    padding: 16,
-    marginBottom: 10,
+    padding: 12,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'transparent',

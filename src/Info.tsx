@@ -65,12 +65,12 @@ const Info: React.FC<InfoProps> = ({isModalVisible = false, brightness = 1.0}) =
     })();
 
     // Tarih, günü ve pil seviyesini her dakika güncelle
-    const intervalId = setInterval(async () => {
+    const intervalId = setInterval( () => {
       let currentDateTime = new Date();
       setDate(getDate(currentDateTime));
       setWeekday(getWeekday(currentDateTime));
 
-      const newBatteryLevel = await getBatteryPercentage();
+      const newBatteryLevel = getBatteryPercentage();
       setBatteryLevel(newBatteryLevel);
       updateBatteryIcon(newBatteryLevel);
     }, 60000);

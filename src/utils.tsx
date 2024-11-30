@@ -6,7 +6,7 @@ export const getBatteryPercentage = async () => {
 };
 
 export const getTime = (propTime: Date) => {
-  if (!propTime instanceof Date) {
+  if (!(propTime instanceof Date)) {
     throw new Error('Invalid date provided to getTime');
   }
   return propTime.toLocaleTimeString([], {
@@ -17,7 +17,7 @@ export const getTime = (propTime: Date) => {
 };
 
 export const getDate = (propDate: Date) => {
-  if (!propDate instanceof Date) {
+  if (!(propDate instanceof Date)) {
     throw new Error('Invalid date provided to getDate');
   }
   return propDate.toLocaleDateString([], {
@@ -28,7 +28,7 @@ export const getDate = (propDate: Date) => {
 };
 
 export const getWeekday = (propWeekday: Date) => {
-  if (!propWeekday instanceof Date) {
+  if (!(propWeekday instanceof Date)) {
     throw new Error('Invalid date provided to getWeekday');
   }
   return propWeekday.toLocaleDateString([], {

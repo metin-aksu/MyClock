@@ -187,7 +187,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
     setOrSet();
   }, [orientationSetting]);
 
-  const applyOrientation = (setting: OrientationTypes) => {
+  const applyOrientation = (setting: typeof OrientationTypes[keyof typeof OrientationTypes]) => {
     switch (setting) {
       case OrientationTypes.PORTRAIT:
         Orientation.lockToPortrait();

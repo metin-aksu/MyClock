@@ -79,7 +79,9 @@ function App(): React.JSX.Element {
     };
   }, []);
 
-  const applyOrientation = setting => {
+  const applyOrientation = (
+    setting: (typeof OrientationTypes)[keyof typeof OrientationTypes],
+  ) => {
     switch (setting) {
       case OrientationTypes.PORTRAIT:
         Orientation.lockToPortrait();

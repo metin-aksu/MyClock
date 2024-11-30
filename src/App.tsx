@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import Settings from './Settings';
 
-// import AnalogClock from './AnalogClock';
+import AnalogClock from './AnalogClock';
 import DigitalClock from './DigitalClock';
 import Info from './Info';
 
@@ -31,7 +31,7 @@ function App(): React.JSX.Element {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [showSettingsIcon, setShowSettingsIcon] = useState(true);
   const [showDigitalClock, setShowDigitalClock] = useState(true);
-  // const [showAnalogClock, setShowAnalogClock] = useState(false);
+  const [showAnalogClock, setShowAnalogClock] = useState(false);
   const [brightness, setBrightness] = useState(1.0);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ function App(): React.JSX.Element {
         const digitalClockValue = await AsyncStorage.getItem(
           'showDigitalClock',
         );
-        // const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
+        const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
         const savedBrightness = await AsyncStorage.getItem('brightness');
 
         setShowSettingsIcon(
@@ -50,9 +50,9 @@ function App(): React.JSX.Element {
         setShowDigitalClock(
           digitalClockValue === null ? true : digitalClockValue === 'true',
         );
-        // setShowAnalogClock(
-        //   analogClockValue === null ? false : analogClockValue === 'true',
-        // );
+        setShowAnalogClock(
+          analogClockValue === null ? false : analogClockValue === 'true',
+        );
         if (savedBrightness !== null) {
           setBrightness(parseFloat(savedBrightness));
         }
@@ -123,12 +123,13 @@ function App(): React.JSX.Element {
             brightness={brightness}
           />
         )}
-        {/* showAnalogClock && (
+        {showAnalogClock && (
           <AnalogClock
             isModalVisible={isModalVisible}
+            isVisible={showAnalogClock}
             brightness={brightness}
           />
-        ) */}
+        )}
         <Info isModalVisible={isModalVisible} brightness={brightness} />
       </SafeAreaView>
     </>

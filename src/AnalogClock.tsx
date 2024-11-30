@@ -12,6 +12,7 @@ interface AnalogClockProps {
   showNumbers?: boolean;
   brightness?: number;
   isModalVisible?: boolean;
+  isVisible?: boolean; // Yeni prop ekledik
 }
 
 const AnalogClock: React.FC<AnalogClockProps> = ({
@@ -26,6 +27,7 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
   showNumbers = true,
   brightness = 1.0,
   isModalVisible = false,
+  isVisible = true, // Varsayılan değer true
 }) => {
   const [time, setTime] = useState(new Date());
   const [showAnalogClock, setShowAnalogClock] = useState(false);
@@ -45,30 +47,31 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
   }, [isModalVisible]);
 
   useEffect(() => {
-    if (showAnalogClock === true) {
+    // İki koşulu da kontrol ediyoruz: showAnalogClock ve isVisible
+    if (showAnalogClock && isVisible) {
       const timer = setInterval(() => {
         setTime(new Date());
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [showAnalogClock]);
+  }, [showAnalogClock, isVisible]); // isVisible'ı dependency array'e ekledik
 
-  // Saat merkez noktası
+  // Eğer komponent görünür değilse null döndürüyoruz
+  if (!isVisible) {
+    return null;
+  }
+
   const center = size / 2;
-  // Kadran yarıçapı
   const radius = (size / 2) * 0.9;
 
-  // Saat, dakika ve saniye açılarını hesapla
-  const secondAngle = time.getSeconds() * 6 - 90; // Her saniye 6 derece (360/60)
-  const minuteAngle = time.getMinutes() * 6 + time.getSeconds() * 0.1 - 90; // Her dakika 6 derece
-  const hourAngle = (time.getHours() % 12) * 30 + time.getMinutes() * 0.5 - 90; // Her saat 30 derece (360/12)
+  const secondAngle = time.getSeconds() * 6 - 90;
+  const minuteAngle = time.getMinutes() * 6 + time.getSeconds() * 0.1 - 90;
+  const hourAngle = (time.getHours() % 12) * 30 + time.getMinutes() * 0.5 - 90;
 
-  // Akrep, yelkovan ve saniye kollarının uzunlukları
   const secondHandLength = radius * 0.8;
   const minuteHandLength = radius * 0.7;
   const hourHandLength = radius * 0.5;
 
-  // Açıdan x,y koordinatlarını hesaplama fonksiyonu
   const getCoordinates = (angle: number, length: number) => {
     const radian = (angle * Math.PI) / 180;
     return {
@@ -77,9 +80,8 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
     };
   };
 
-  // Saat rakamlarını oluştur
   const numbers = Array.from({length: 12}, (_, i) => {
-    const angle = (i * 30 - 60) * (Math.PI / 180); // Her rakam arası 30 derece
+    const angle = ((i + 33) % 12) * 30 * (Math.PI / 180);
     const numberRadius = radius * 0.8;
     return {
       number: i === 0 ? 12 : i,
@@ -95,7 +97,6 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
   return (
     <View style={[styles.container, {opacity: brightness}]}>
       <Svg height={size} width={size}>
-        {/* Saat kadranı */}
         <Circle
           cx={center}
           cy={center}
@@ -105,7 +106,6 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
           fill="none"
         />
 
-        {/* Saat çizgileri */}
         {Array.from({length: 60}).map((_, i) => {
           const angle = (i * 6 - 90) * (Math.PI / 180);
           const isHour = i % 5 === 0;
@@ -126,7 +126,6 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
           );
         })}
 
-        {/* Saat rakamları */}
         {showNumbers &&
           numbers.map(({number, x, y}) => (
             <Text
@@ -141,10 +140,8 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
             </Text>
           ))}
 
-        {/* Merkez noktası */}
         <Circle cx={center} cy={center} r={4} fill={dialColor} />
 
-        {/* Akrep */}
         <Line
           x1={center}
           y1={center}
@@ -155,7 +152,6 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
           strokeLinecap="round"
         />
 
-        {/* Yelkovan */}
         <Line
           x1={center}
           y1={center}
@@ -166,7 +162,6 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
           strokeLinecap="round"
         />
 
-        {/* Saniye */}
         <Line
           x1={center}
           y1={center}

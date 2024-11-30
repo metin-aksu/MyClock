@@ -43,7 +43,7 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({onClose}) => {
   const [showDigitalClock, setShowDigitalClock] = useState(true);
-  // const [showAnalogClock, setShowAnalogClock] = useState(false);
+  const [showAnalogClock, setShowAnalogClock] = useState(false);
 
   const [showDate, setShowDate] = useState(true);
   const [showWeekday, setShowWeekday] = useState(true);
@@ -62,7 +62,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
       // DEĞER OKUMALAR
       // =========================
       const digitalClockValue = await AsyncStorage.getItem('showDigitalClock');
-      // const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
+      const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
       const dateValue = await AsyncStorage.getItem('showDate');
       const weekdayValue = await AsyncStorage.getItem('showWeekday');
       const batteryValue = await AsyncStorage.getItem('showBattery');
@@ -82,9 +82,9 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
       setShowDigitalClock(
         digitalClockValue === null ? true : digitalClockValue === 'true',
       );
-      // setShowAnalogClock(
-      //   analogClockValue === null ? false : analogClockValue === 'true',
-      // );
+      setShowAnalogClock(
+        analogClockValue === null ? false : analogClockValue === 'true',
+      );
       setShowDate(dateValue === null ? true : dateValue === 'true');
       setShowWeekday(weekdayValue === null ? true : weekdayValue === 'true');
       setShowBattery(batteryValue === null ? true : batteryValue === 'true');
@@ -118,10 +118,15 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
     await AsyncStorage.setItem('showDigitalClock', String(value));
   };
 
-  // const handleShowAnalogClockChange = async (value: boolean) => {
-  //   setShowAnalogClock(value);
-  //   await AsyncStorage.setItem('showAnalogClock', String(value));
-  // };
+  const handleShowAnalogClockChange = async (value: boolean) => {
+    value &&
+    Alert.alert(
+      'Attention',
+      'Analog clock may increase battery consumption.',
+    );
+    setShowAnalogClock(value);
+    await AsyncStorage.setItem('showAnalogClock', String(value));
+  };
 
   const handleShowDateChange = async (value: boolean) => {
     setShowDate(value);
@@ -174,17 +179,15 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
 
   useEffect(() => {
     const setOrSet = async () => {
-      try {
+      if (orientationSetting !== undefined && orientationSetting !== null) {
         await AsyncStorage.setItem('orientation', orientationSetting);
         applyOrientation(orientationSetting);
-      } catch (error) {
-        console.error('Error saving orientation setting:', error);
       }
     };
     setOrSet();
   }, [orientationSetting]);
 
-  const applyOrientation = setting => {
+  const applyOrientation = (setting: OrientationTypes) => {
     switch (setting) {
       case OrientationTypes.PORTRAIT:
         Orientation.lockToPortrait();
@@ -223,7 +226,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
             <Text style={styles.label}>Show digital clock</Text>
           </Pressable>
 
-          {/* <Pressable
+          <Pressable
             style={styles.checkboxContainer}
             onPress={() => handleShowAnalogClockChange(!showAnalogClock)}>
             <Image
@@ -231,7 +234,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
               source={showAnalogClock ? checkedIcon : uncheckedIcon}
             />
             <Text style={styles.label}>Show analog clock</Text>
-          </Pressable> */}
+          </Pressable>
 
           <Pressable
             style={styles.checkboxContainer}
@@ -361,6 +364,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
             <View style={styles.orientationContainer}>
               <TouchableOpacity
                 style={[
+                  {width: '30%'},
                   styles.option,
                   orientationSetting === OrientationTypes.FREE &&
                     styles.selectedOption,
@@ -371,6 +375,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
 
               <TouchableOpacity
                 style={[
+                  {width: '30%'},
                   styles.option,
                   orientationSetting === OrientationTypes.PORTRAIT &&
                     styles.selectedOption,
@@ -383,6 +388,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
 
               <TouchableOpacity
                 style={[
+                  {width: '35%'},
                   styles.option,
                   orientationSetting === OrientationTypes.LANDSCAPE &&
                     styles.selectedOption,
@@ -501,11 +507,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   option: {
-    width: '32%',
     backgroundColor: '#222',
     borderRadius: 8,
-    padding: 12,
+    padding: 10,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
   },
@@ -514,7 +520,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a3c5a',
   },
   optionText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#fff',
   },
 });

@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   settingsContainer: {
     position: 'absolute',
-    top: 10,
+    top: Platform.select({ios: 70, android: 10}),
     right: 20,
   },
   settingsIcon: {

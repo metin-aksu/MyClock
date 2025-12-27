@@ -7,6 +7,7 @@ import {
   Image,
   Modal,
   Pressable,
+  Platform,
 } from 'react-native';
 import Settings from './Settings';
 
@@ -68,7 +69,9 @@ function App(): React.JSX.Element {
   }, [isModalVisible]);
 
   useEffect(() => {
-    Immersive.on();
+    if (Platform.OS === 'android') {
+      Immersive.on();
+    }
   }, []);
 
   useEffect(() => {

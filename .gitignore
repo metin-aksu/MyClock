@@ -34,6 +34,8 @@ local.properties
 *.keystore
 !debug.keystore
 gradle.properties
+*.certSigningRequest
+*.cer
 
 # node.js
 #

@@ -15,6 +15,7 @@ import Slider from '@react-native-community/slider';
 import Orientation from 'react-native-orientation-locker';
 
 import About from './About';
+import ColorPicker from './ColorPicker';
 
 const closeIcon = require('./assets/icons/close-icon.png');
 const checkedIcon = require('./assets/icons/checked-icon.png');
@@ -55,12 +56,19 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
   const [brightness, setBrightness] = useState(1.0);
   const [selectedFont, setSelectedFont] = useState('System');
   const [orientationSetting, setOrientationSetting] = useState();
+  const [backgroundColor, setBackgroundColor] = useState('#000000');
+
+  const handleBackgroundColorChange = async (color: string) => {
+    setBackgroundColor(color);
+    await AsyncStorage.setItem('backgroundColor', color);
+  };
 
   const loadSettings = async () => {
     try {
       // =========================
       // DEĞER OKUMALAR
       // =========================
+      const savedBackgroundColor = await AsyncStorage.getItem('backgroundColor');
       const digitalClockValue = await AsyncStorage.getItem('showDigitalClock');
       const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
       const dateValue = await AsyncStorage.getItem('showDate');
@@ -91,6 +99,11 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
       setShowSettingsIcon(
         settingsValue === null ? true : settingsValue === 'true',
       );
+      setBackgroundColor(savedBackgroundColor || '#000000');
+        const handleBackgroundColorChange = async (color: string) => {
+          setBackgroundColor(color);
+          await AsyncStorage.setItem('backgroundColor', color);
+        };
       setPortraitClockFontSize(
         portraitFontSize === null ? 80 : Number(portraitFontSize),
       );
@@ -216,6 +229,8 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
         showsVerticalScrollIndicator={false} // Kaydırma çubuğunu gizler (opsiyonel)
       >
         <View style={styles.settingsContainer}>
+          <Text style={styles.sectionTitle}>Background Color</Text>
+          <ColorPicker value={backgroundColor} onChange={handleBackgroundColorChange} />
           <Pressable
             style={styles.checkboxContainer}
             onPress={() => handleShowDigitalClockChange(!showDigitalClock)}>

@@ -9,6 +9,7 @@ import {
   Pressable,
   Platform,
 } from 'react-native';
+import { BackHandler } from 'react-native';
 import Settings from './Settings';
 
 import AnalogClock from './AnalogClock';
@@ -21,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Orientation from 'react-native-orientation-locker';
 
 const settingsIcon = require('./assets/icons/settings-icon.png');
+const closeIcon = require('./assets/icons/close-icon.png');
 
 const OrientationTypes = {
   FREE: 'free',
@@ -34,16 +36,16 @@ function App(): React.JSX.Element {
   const [showDigitalClock, setShowDigitalClock] = useState(true);
   const [showAnalogClock, setShowAnalogClock] = useState(false);
   const [brightness, setBrightness] = useState(1.0);
+  const [backgroundColor, setBackgroundColor] = useState('#000000');
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
         const settingsValue = await AsyncStorage.getItem('showSettingsIcon');
-        const digitalClockValue = await AsyncStorage.getItem(
-          'showDigitalClock',
-        );
+        const digitalClockValue = await AsyncStorage.getItem('showDigitalClock');
         const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
         const savedBrightness = await AsyncStorage.getItem('brightness');
+        const savedBackgroundColor = await AsyncStorage.getItem('backgroundColor');
 
         setShowSettingsIcon(
           settingsValue === null ? true : settingsValue === 'true',
@@ -57,6 +59,7 @@ function App(): React.JSX.Element {
         if (savedBrightness !== null) {
           setBrightness(parseFloat(savedBrightness));
         }
+        setBackgroundColor(savedBackgroundColor || '#000000');
         const savedOrientation = await AsyncStorage.getItem('orientation');
         if (savedOrientation !== null) {
           applyOrientation(savedOrientation);
@@ -109,9 +112,24 @@ function App(): React.JSX.Element {
         <Settings onClose={() => setIsModalVisible(false)} />
       </Modal>
 
-      <SafeAreaView style={styles.container}>
-        <View style={styles.settingsContainer}>
-          <Pressable onPress={() => setIsModalVisible(true)}>
+
+      <SafeAreaView style={[styles.container, { backgroundColor }]}> 
+        <View style={styles.topBar}>
+          {/* Çıkış ikonu (solda) sadece Android'de */}
+          {Platform.OS === 'android' && (
+            <Pressable
+              onPress={() => {
+                BackHandler.exitApp();
+              }}
+              style={styles.iconButton}
+            >
+              <Image style={styles.settingsIcon} source={closeIcon} />
+            </Pressable>
+          )}
+          {/* Boşluk */}
+          <View style={{ flex: 1 }} />
+          {/* Ayarlar ikonu (sağda) */}
+          <Pressable onPress={() => setIsModalVisible(true)} style={styles.iconButton}>
             {showSettingsIcon ? (
               <Image style={styles.settingsIcon} source={settingsIcon} />
             ) : (
@@ -148,10 +166,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#000',
   },
-  settingsContainer: {
+  topBar: {
     position: 'absolute',
-    top: Platform.select({ios: 70, android: 10}),
-    right: 20,
+    top: Platform.select({ ios: 70, android: 10 }),
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    zIndex: 10,
+  },
+  iconButton: {
+    padding: 8,
   },
   settingsIcon: {
     width: 24,

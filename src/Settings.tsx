@@ -15,7 +15,7 @@ import Slider from '@react-native-community/slider';
 import Orientation from 'react-native-orientation-locker';
 
 import About from './About';
-import ColorPicker from './ColorPicker';
+import CustomColorPicker from './CustomColorPicker';
 
 const closeIcon = require('./assets/icons/close-icon.png');
 const checkedIcon = require('./assets/icons/checked-icon.png');
@@ -230,7 +230,7 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
       >
         <View style={styles.settingsContainer}>
           <Text style={styles.sectionTitle}>Background Color</Text>
-          <ColorPicker value={backgroundColor} onChange={handleBackgroundColorChange} />
+          <CustomColorPicker value={backgroundColor} onChange={handleBackgroundColorChange} />
           <Pressable
             style={styles.checkboxContainer}
             onPress={() => handleShowDigitalClockChange(!showDigitalClock)}>

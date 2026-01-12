@@ -55,7 +55,8 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
   const [landscapeClockFontSize, setLandscapeClockFontSize] = useState(120);
   const [brightness, setBrightness] = useState(1.0);
   const [selectedFont, setSelectedFont] = useState('System');
-  const [orientationSetting, setOrientationSetting] = useState();
+  // Varsayılan olarak 'free' olsun
+  const [orientationSetting, setOrientationSetting] = useState(OrientationTypes.FREE);
   const [backgroundColor, setBackgroundColor] = useState('#000000');
 
   const handleBackgroundColorChange = async (color: string) => {
@@ -100,10 +101,6 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
         settingsValue === null ? true : settingsValue === 'true',
       );
       setBackgroundColor(savedBackgroundColor || '#000000');
-        const handleBackgroundColorChange = async (color: string) => {
-          setBackgroundColor(color);
-          await AsyncStorage.setItem('backgroundColor', color);
-        };
       setPortraitClockFontSize(
         portraitFontSize === null ? 80 : Number(portraitFontSize),
       );
@@ -114,7 +111,9 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
         setBrightness(parseFloat(savedBrightness));
       }
       setSelectedFont(savedFont === null ? 'System' : savedFont);
-      if (savedOrientation !== null) {
+      if (savedOrientation === null) {
+        setOrientationSetting(OrientationTypes.FREE);
+      } else {
         setOrientationSetting(savedOrientation);
       }
     } catch (error) {
@@ -215,9 +214,30 @@ const Settings: React.FC<SettingsProps> = ({onClose}) => {
     }
   };
 
+  // Ekran yönünü takip etmek için state
+  // Hem cihaz yönü hem de ayar seçimi için state
+  const [isDeviceLandscape, setIsDeviceLandscape] = useState(false);
+
+  useEffect(() => {
+    const updateOrientation = () => {
+      Orientation.getDeviceOrientation((orientation) => {
+        setIsDeviceLandscape(orientation === 'LANDSCAPE-LEFT' || orientation === 'LANDSCAPE-RIGHT');
+      });
+    };
+    Orientation.addDeviceOrientationListener(updateOrientation);
+    // İlk yüklemede kontrol et
+    updateOrientation();
+    return () => {
+      Orientation.removeDeviceOrientationListener(updateOrientation);
+    };
+  }, []);
+
+  // paddingRight için: sadece ayar LANDSCAPE ise veya ayar FREE olup cihaz landscape ise 50, diğer durumlarda 24
+  const isLandscape = orientationSetting === OrientationTypes.LANDSCAPE || (orientationSetting === OrientationTypes.FREE && isDeviceLandscape);
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.titleContainer}>
+      <View style={[styles.titleContainer, {paddingRight: isLandscape ? 50 : 24}]}> 
         <Text style={styles.title}>Settings</Text>
         <Pressable onPress={onClose}>
           <Image style={styles.closeIcon} source={closeIcon} />
@@ -429,6 +449,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#111',
+    paddingBottom: 60,
   },
   scrollView: {
     flex: 1,
@@ -440,9 +461,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 24,
+    paddingTop: 60,
     paddingLeft: 24,
-    paddingRight: 24,
+    // paddingRight dinamik olarak View içinde ayarlanıyor
   },
   title: {
     fontSize: 24,

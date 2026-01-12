@@ -113,7 +113,7 @@ function App(): React.JSX.Element {
       </Modal>
 
 
-      <SafeAreaView style={[styles.container, { backgroundColor }]}> 
+      <SafeAreaView style={[styles.container, { backgroundColor }]}>
         <View style={styles.topBar}>
           {/* Çıkış ikonu (solda) sadece Android'de */}
           {Platform.OS === 'android' && (
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   },
   topBar: {
     position: 'absolute',
-    top: Platform.select({ ios: 70, android: 10 }),
+    top: Platform.select({ ios: 70, android: 30 }),
     left: 0,
     right: 0,
     flexDirection: 'row',

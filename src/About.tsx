@@ -16,10 +16,6 @@ const About: React.FC = () => {
 
   return (
     <View style={styles.aboutContainer}>
-      <Text style={styles.aboutText}>About</Text>
-      <Text style={styles.aboutText}>
-        {appName} {appVersion}
-      </Text>
       <Text style={styles.aboutText}>{appAuthor}</Text>
       <TouchableOpacity onPress={handleLinkPress}>
         <Text style={[styles.aboutText, styles.linkText]}>{appWebsite}</Text>

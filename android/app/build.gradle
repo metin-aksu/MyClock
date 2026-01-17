@@ -82,8 +82,8 @@ android {
         applicationId "com.metinaksu.myclock"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion 35
-        versionCode 3
-        versionName "1.2"
+        versionCode 4
+        versionName "1.4"
     }
     signingConfigs {
         release {

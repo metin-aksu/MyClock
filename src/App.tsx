@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   SafeAreaView,
   Text,
@@ -17,7 +17,7 @@ import DigitalClock from './DigitalClock';
 import Info from './Info';
 
 import KeepAwake from 'react-native-keep-awake';
-import {Immersive} from 'react-native-immersive';
+// Immersive mode is now handled natively in MainActivity.kt
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Orientation from 'react-native-orientation-locker';
 
@@ -71,11 +71,7 @@ function App(): React.JSX.Element {
     loadSettings();
   }, [isModalVisible]);
 
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      Immersive.on();
-    }
-  }, []);
+  // Immersive mode is now handled natively in MainActivity.kt
 
   useEffect(() => {
     KeepAwake.activate(); // Uygulamanın ekranını açık tut

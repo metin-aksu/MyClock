@@ -82,8 +82,19 @@ android {
         applicationId "com.metinaksu.myclock"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion 35
-        versionCode 4
-        versionName "1.4"
+        versionCode 7
+        versionName "1.7"
+        externalNativeBuild {
+            cmake {
+                cppFlags "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+            }
+        }
+    }
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+        doNotStrip "**/*.so"
     }
     signingConfigs {
         release {
@@ -107,8 +118,7 @@ dependencies {
     implementation("com.facebook.react:react-android")
 
     if (hermesEnabled.toBoolean()) {
-        // 16KB bellek sayfası desteği için hermes-android güncel sürüm
-        implementation("com.facebook.react:hermes-android:0.76.2")
+        implementation("com.facebook.react:hermes-android")
     } else {
         implementation jscFlavor
     }

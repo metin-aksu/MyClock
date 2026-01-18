@@ -4,7 +4,7 @@ buildscript {
         minSdkVersion = 24
         compileSdkVersion = 35
         targetSdkVersion = 35
-        ndkVersion = "26.1.10909125"
+        ndkVersion = "27.0.12077973"
         kotlinVersion = "1.9.24"
     }
     repositories {
@@ -15,6 +15,24 @@ buildscript {
         classpath("com.android.tools.build:gradle")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+    }
+}
+
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            project.android {
+                if (it.hasProperty("defaultConfig")) {
+                    defaultConfig {
+                        externalNativeBuild {
+                            cmake {
+                                cppFlags "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

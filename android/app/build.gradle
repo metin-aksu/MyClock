@@ -94,7 +94,6 @@ android {
         jniLibs {
             useLegacyPackaging = true
         }
-        doNotStrip "**/*.so"
     }
     signingConfigs {
         // Şifreler ~/.gradle/gradle.properties içindedir, depoya eklenmez

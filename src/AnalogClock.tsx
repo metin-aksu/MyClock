@@ -1,65 +1,27 @@
-import React, {useEffect, useState} from 'react';
-import {View, StyleSheet, Dimensions} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React from 'react';
+import {View, StyleSheet} from 'react-native';
 import Svg, {Circle, Line, Text} from 'react-native-svg';
 
+import {useAlignedNow} from './useAlignedNow';
+
 interface AnalogClockProps {
-  size?: number;
-  hourHandColor?: string;
-  minuteHandColor?: string;
+  size: number;
+  color?: string;
   secondHandColor?: string;
-  dialColor?: string;
   showNumbers?: boolean;
   brightness?: number;
-  isModalVisible?: boolean;
-  isVisible?: boolean; // Yeni prop ekledik
+  isActive?: boolean;
 }
 
 const AnalogClock: React.FC<AnalogClockProps> = ({
-  size = Math.min(
-    Dimensions.get('window').width,
-    Dimensions.get('window').height,
-  ) * 0.8,
-  hourHandColor = '#FFFFFF',
-  minuteHandColor = '#CCCCCC',
+  size,
+  color = '#FFFFFF',
   secondHandColor = '#FF0000',
-  dialColor = '#FFFFFF',
   showNumbers = true,
   brightness = 1.0,
-  isModalVisible = false,
-  isVisible = true, // Varsayılan değer true
+  isActive = true,
 }) => {
-  const [time, setTime] = useState(new Date());
-  const [showAnalogClock, setShowAnalogClock] = useState(false);
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
-        setShowAnalogClock(
-          analogClockValue === null ? false : analogClockValue === 'true',
-        );
-      } catch (error) {
-        console.error('Error loading settings:', error);
-      }
-    };
-    loadSettings();
-  }, [isModalVisible]);
-
-  useEffect(() => {
-    // İki koşulu da kontrol ediyoruz: showAnalogClock ve isVisible
-    if (showAnalogClock && isVisible) {
-      const timer = setInterval(() => {
-        setTime(new Date());
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [showAnalogClock, isVisible]); // isVisible'ı dependency array'e ekledik
-
-  // Eğer komponent görünür değilse null döndürüyoruz
-  if (!isVisible) {
-    return null;
-  }
+  const time = useAlignedNow(1000, isActive);
 
   const center = size / 2;
   const radius = (size / 2) * 0.9;
@@ -101,7 +63,7 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
           cx={center}
           cy={center}
           r={radius}
-          stroke={dialColor}
+          stroke={color}
           strokeWidth="2"
           fill="none"
         />
@@ -109,7 +71,7 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
         {Array.from({length: 60}).map((_, i) => {
           const angle = (i * 6 - 90) * (Math.PI / 180);
           const isHour = i % 5 === 0;
-          const lineLength = isHour ? 15 : 10;
+          const lineLength = radius * (isHour ? 0.08 : 0.05);
           const outerRadius = radius;
           const innerRadius = radius - lineLength;
 
@@ -120,7 +82,7 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
               y1={center + innerRadius * Math.sin(angle)}
               x2={center + outerRadius * Math.cos(angle)}
               y2={center + outerRadius * Math.sin(angle)}
-              stroke={dialColor}
+              stroke={color}
               strokeWidth={isHour ? 2 : 1}
             />
           );
@@ -132,7 +94,7 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
               key={number}
               x={x}
               y={y + 5}
-              fill={dialColor}
+              fill={color}
               fontSize={radius * 0.15}
               textAnchor="middle"
               alignmentBaseline="middle">
@@ -140,14 +102,14 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
             </Text>
           ))}
 
-        <Circle cx={center} cy={center} r={4} fill={dialColor} />
+        <Circle cx={center} cy={center} r={4} fill={color} />
 
         <Line
           x1={center}
           y1={center}
           x2={hourHand.x}
           y2={hourHand.y}
-          stroke={hourHandColor}
+          stroke={color}
           strokeWidth="4"
           strokeLinecap="round"
         />
@@ -157,7 +119,8 @@ const AnalogClock: React.FC<AnalogClockProps> = ({
           y1={center}
           x2={minuteHand.x}
           y2={minuteHand.y}
-          stroke={minuteHandColor}
+          stroke={color}
+          strokeOpacity={0.8}
           strokeWidth="3"
           strokeLinecap="round"
         />

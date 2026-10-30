@@ -1,77 +1,65 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-  SafeAreaView,
-  Text,
-  View,
-  StyleSheet,
+  BackHandler,
   Image,
   Modal,
-  Pressable,
   Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
 } from 'react-native';
-import { BackHandler } from 'react-native';
-import Settings from './Settings';
-
-import AnalogClock from './AnalogClock';
-import DigitalClock from './DigitalClock';
-import Info from './Info';
-
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import KeepAwake from 'react-native-keep-awake';
 // Immersive mode is now handled natively in MainActivity.kt
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Orientation from 'react-native-orientation-locker';
+
+import ClockFace, {resolveAppearance} from './ClockFace';
+import Settings from './Settings';
+import {
+  OrientationTypes,
+  SettingsProvider,
+  useSettings,
+} from './SettingsContext';
+import {useScreenBrightness} from './screenBrightness';
+import {useAlignedNow} from './useAlignedNow';
+import {BURN_IN_MARGIN, getBurnInOffset} from './utils';
 
 const settingsIcon = require('./assets/icons/settings-icon.png');
 const closeIcon = require('./assets/icons/close-icon.png');
 
-const OrientationTypes = {
-  FREE: 'free',
-  PORTRAIT: 'portrait',
-  LANDSCAPE: 'landscape',
+const TOP_BAR_HEIGHT = 48;
+
+const applyOrientation = (setting: string) => {
+  switch (setting) {
+    case OrientationTypes.PORTRAIT:
+      Orientation.lockToPortrait();
+      break;
+    case OrientationTypes.LANDSCAPE:
+      Orientation.lockToLandscape();
+      break;
+    case OrientationTypes.FREE:
+    default:
+      Orientation.unlockAllOrientations();
+      break;
+  }
 };
 
-function App(): React.JSX.Element {
+function ClockScreen(): React.JSX.Element {
+  const {settings, isLoaded} = useSettings();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [showSettingsIcon, setShowSettingsIcon] = useState(true);
-  const [showDigitalClock, setShowDigitalClock] = useState(true);
-  const [showAnalogClock, setShowAnalogClock] = useState(false);
-  const [brightness, setBrightness] = useState(1.0);
-  const [backgroundColor, setBackgroundColor] = useState('#000000');
+  const {width, height} = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const now = useAlignedNow(60000);
 
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const settingsValue = await AsyncStorage.getItem('showSettingsIcon');
-        const digitalClockValue = await AsyncStorage.getItem('showDigitalClock');
-        const analogClockValue = await AsyncStorage.getItem('showAnalogClock');
-        const savedBrightness = await AsyncStorage.getItem('brightness');
-        const savedBackgroundColor = await AsyncStorage.getItem('backgroundColor');
-
-        setShowSettingsIcon(
-          settingsValue === null ? true : settingsValue === 'true',
-        );
-        setShowDigitalClock(
-          digitalClockValue === null ? true : digitalClockValue === 'true',
-        );
-        setShowAnalogClock(
-          analogClockValue === null ? false : analogClockValue === 'true',
-        );
-        if (savedBrightness !== null) {
-          setBrightness(parseFloat(savedBrightness));
-        }
-        setBackgroundColor(savedBackgroundColor || '#000000');
-        const savedOrientation = await AsyncStorage.getItem('orientation');
-        if (savedOrientation !== null) {
-          applyOrientation(savedOrientation);
-        }
-      } catch (error) {
-        console.error('Error loading settings:', error);
-      }
-    };
-    loadSettings();
-  }, [isModalVisible]);
-
-  // Immersive mode is now handled natively in MainActivity.kt
+    if (isLoaded) {
+      applyOrientation(settings.orientation);
+    }
+  }, [isLoaded, settings.orientation]);
 
   useEffect(() => {
     KeepAwake.activate(); // Uygulamanın ekranını açık tut
@@ -81,22 +69,26 @@ function App(): React.JSX.Element {
     };
   }, []);
 
-  const applyOrientation = (
-    setting: (typeof OrientationTypes)[keyof typeof OrientationTypes],
-  ) => {
-    switch (setting) {
-      case OrientationTypes.PORTRAIT:
-        Orientation.lockToPortrait();
-        break;
-      case OrientationTypes.LANDSCAPE:
-        Orientation.lockToLandscape();
-        break;
-      case OrientationTypes.FREE:
-      default:
-        Orientation.unlockAllOrientations();
-        break;
-    }
-  };
+  const {backgroundColor, textColor, opacity, screenBrightness} =
+    resolveAppearance(settings, now);
+  useScreenBrightness(screenBrightness);
+
+  const offset = settings.burnInProtection
+    ? getBurnInOffset(now)
+    : {x: 0, y: 0};
+  const iconStyle = [styles.icon, {tintColor: textColor, opacity}];
+
+  // Üst çubuk altta da aynı kadar boşluk ayırır, saat ortada kalır
+  const faceWidth =
+    width - insets.left - insets.right - 2 * BURN_IN_MARGIN;
+  const faceHeight =
+    height -
+    2 * Math.max(insets.top, insets.bottom) -
+    2 * (TOP_BAR_HEIGHT + BURN_IN_MARGIN);
+
+  if (!isLoaded) {
+    return <View style={styles.loading} />;
+  }
 
   return (
     <>
@@ -104,85 +96,110 @@ function App(): React.JSX.Element {
         visible={isModalVisible}
         animationType="slide"
         transparent
+        statusBarTranslucent
+        navigationBarTranslucent
+        supportedOrientations={[
+          'portrait',
+          'landscape-left',
+          'landscape-right',
+        ]}
         onRequestClose={() => setIsModalVisible(false)}>
         <Settings onClose={() => setIsModalVisible(false)} />
       </Modal>
 
-
-      <SafeAreaView style={[styles.container, { backgroundColor }]}>
-        <View style={styles.topBar}>
-          {/* Çıkış ikonu (solda) sadece Android'de */}
-          {Platform.OS === 'android' && (
-            <Pressable
-              onPress={() => {
-                BackHandler.exitApp();
-              }}
-              style={styles.iconButton}
-            >
-              <Image style={styles.settingsIcon} source={closeIcon} />
-            </Pressable>
-          )}
-          {/* Boşluk */}
-          <View style={{ flex: 1 }} />
-          {/* Ayarlar ikonu (sağda) */}
-          <Pressable onPress={() => setIsModalVisible(true)} style={styles.iconButton}>
-            {showSettingsIcon ? (
-              <Image style={styles.settingsIcon} source={settingsIcon} />
-            ) : (
-              <Text style={[styles.settingsText, styles.settingsIcon]}>
-                &nbsp;
-              </Text>
+      <View style={[styles.container, {backgroundColor}]}>
+        <View
+          style={[
+            styles.content,
+            {transform: [{translateX: offset.x}, {translateY: offset.y}]},
+          ]}>
+          <View
+            style={[
+              styles.topBar,
+              {
+                top: insets.top + BURN_IN_MARGIN,
+                left: insets.left,
+                right: insets.right,
+              },
+            ]}>
+            {/* Çıkış ikonu (solda) sadece Android'de */}
+            {Platform.OS === 'android' && (
+              <Pressable
+                onPress={() => {
+                  BackHandler.exitApp();
+                }}
+                style={styles.iconButton}>
+                <Image style={iconStyle} source={closeIcon} />
+              </Pressable>
             )}
-          </Pressable>
-        </View>
+            {/* Boşluk */}
+            <View style={styles.spacer} />
+            {/* Ayarlar ikonu (sağda) */}
+            <Pressable
+              onPress={() => setIsModalVisible(true)}
+              style={styles.iconButton}>
+              {settings.showSettingsIcon ? (
+                <Image style={iconStyle} source={settingsIcon} />
+              ) : (
+                <View style={styles.icon} />
+              )}
+            </Pressable>
+          </View>
 
-        {showDigitalClock && (
-          <DigitalClock
-            isModalVisible={isModalVisible}
-            brightness={brightness}
+          <ClockFace
+            settings={settings}
+            now={now}
+            width={faceWidth}
+            height={faceHeight}
+            isActive={!isModalVisible}
           />
-        )}
-        {showAnalogClock && (
-          <AnalogClock
-            isModalVisible={isModalVisible}
-            isVisible={showAnalogClock}
-            brightness={brightness}
-          />
-        )}
-        <Info isModalVisible={isModalVisible} brightness={brightness} />
-      </SafeAreaView>
+        </View>
+      </View>
     </>
+  );
+}
+
+function App(): React.JSX.Element {
+  return (
+    <SafeAreaProvider>
+      <SettingsProvider>
+        <ClockScreen />
+      </SettingsProvider>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loading: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  content: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
   },
   topBar: {
     position: 'absolute',
-    top: Platform.select({ ios: 70, android: 30 }),
-    left: 0,
-    right: 0,
+    height: TOP_BAR_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     zIndex: 10,
   },
+  spacer: {
+    flex: 1,
+  },
   iconButton: {
     padding: 8,
   },
-  settingsIcon: {
+  icon: {
     width: 24,
     height: 24,
-  },
-  settingsText: {
-    fontSize: 18,
-    color: '#fff',
   },
 });
 

@@ -81,9 +81,9 @@ android {
     defaultConfig {
         applicationId "com.metinaksu.myclock"
         minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion 35
-        versionCode 7
-        versionName "1.7"
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 8
+        versionName "1.8.0"
         externalNativeBuild {
             cmake {
                 cppFlags "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
@@ -97,16 +97,25 @@ android {
         doNotStrip "**/*.so"
     }
     signingConfigs {
-        release {
-            storeFile file("my-release-key.keystore")
-            storePassword MYAPP_RELEASE_STORE_PASSWORD
-            keyAlias "my-key-alias"
-            keyPassword MYAPP_RELEASE_KEY_PASSWORD
+        // Şifreler ~/.gradle/gradle.properties içindedir, depoya eklenmez
+        if (project.hasProperty("MYCLOCK_UPLOAD_STORE_PASSWORD")) {
+            release {
+                storeFile file(MYCLOCK_UPLOAD_STORE_FILE)
+                storePassword MYCLOCK_UPLOAD_STORE_PASSWORD
+                keyAlias MYCLOCK_UPLOAD_KEY_ALIAS
+                keyPassword MYCLOCK_UPLOAD_KEY_PASSWORD
+            }
         }
     }
     buildTypes {
+        debug {
+            // Yüklü mağaza sürümünün yanına kurulabilsin
+            applicationIdSuffix ".dev"
+        }
         release {
-            signingConfig signingConfigs.release
+            if (project.hasProperty("MYCLOCK_UPLOAD_STORE_PASSWORD")) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

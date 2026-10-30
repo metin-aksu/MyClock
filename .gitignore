@@ -33,7 +33,6 @@ local.properties
 .cxx/
 *.keystore
 !debug.keystore
-gradle.properties
 *.certSigningRequest
 *.cer
 
@@ -75,3 +74,7 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Build outputs
+*.aab
+*.apk

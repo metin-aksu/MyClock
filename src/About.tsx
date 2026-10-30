@@ -2,10 +2,10 @@ import React from 'react';
 import {View, Text, StyleSheet, Linking, TouchableOpacity} from 'react-native';
 import {
   version as appVersion,
-  name as appName,
   author as appAuthor,
   website as appWebsite,
 } from '../app.json';
+import {strings} from './i18n';
 
 const About: React.FC = () => {
   const handleLinkPress = () => {
@@ -20,6 +20,9 @@ const About: React.FC = () => {
       <TouchableOpacity onPress={handleLinkPress}>
         <Text style={[styles.aboutText, styles.linkText]}>{appWebsite}</Text>
       </TouchableOpacity>
+      <Text style={styles.aboutText}>
+        {strings.version} {appVersion}
+      </Text>
     </View>
   );
 };
